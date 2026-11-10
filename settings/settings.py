@@ -3,6 +3,7 @@ import peewee
 from dotenv import load_dotenv
 import discord
 from discord import app_commands
+from functools import wraps
 
 load_dotenv()
 
@@ -133,9 +134,32 @@ class SettingsCommands(app_commands.Group):
         await interaction.response.send_message(embed=embed)
 
 
+# Decorator to check if a module is enabled
+def is_module_enabled(module_name):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(interaction: discord.Interaction, *args, **kwargs):
+            try:
+                settings = Settings.get(Settings.guild_id == interaction.guild.id)
+            except peewee.DoesNotExist:
+                settings = Settings.create(guild_id=interaction.guild.id)
+
+            module_status = getattr(settings, f"module_{module_name}", False)
+            if not module_status:
+                if interaction.user.guild_permissions.administrator:
+                    message = f"Module `{module_name}` is currently disabled. Please enable it to use this command"
+                else:
+                    message = f"Module `{module_name}` is currently disabled."
+                embed = discord.Embed(title="❌ Error", colour=discord.Colour(0xff0000), description=message)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                return
+            return await func(interaction, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 async def setup(bot):
     db.create_tables([Settings])
     bot.tree.add_command(SettingsCommands(name="settings", description="Settings commands"))
-
-# Set to true to allow 18+ content (still requires the channel to be marked as NSFW)
-NSFW_ALLOWED = False

@@ -1,6 +1,5 @@
 import discord
 from discord import app_commands
-from settings.settings import NSFW_ALLOWED
 import requests
 
 
@@ -68,5 +67,7 @@ async def setup(bot):
     This global function is defined as the entry point on what to do when the NSFW extension is loaded.
     It adds the NSFW commands to the bot's command tree.
     """
-    if NSFW_ALLOWED:
-        bot.tree.add_command(NsfwCommands(name="nsfw", description="NSFW commands"))
+    bot.tree.add_command(NsfwCommands(name="nsfw", description="NSFW commands",
+                                      allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
+                                      allowed_contexts=app_commands.AppCommandContext(guild=True, dm_channel=True,
+                                                                                      private_channel=True)))

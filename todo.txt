@@ -1,0 +1,15 @@
+- Added: `base64`, `binary`
+- `/animu/face-palm`, `/animu/wink` always return the same gif
+
+todo:
+- set default app install and context status to everything allowed
+- move connect4 to games.py
+
+
+probably not use this https://github.com/Soheab/somerandomapi.py
+
+
+https://discordpy.readthedocs.io/en/latest/interactions/api.html#discord.Component
+
+https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.Bot.allowed_installs
+

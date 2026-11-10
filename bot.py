@@ -31,6 +31,9 @@ bot = commands.Bot(command_prefix='!', help_command=None, intents=discord.Intent
                    activity=discord.Activity(type=discord.ActivityType.listening, name="your commands"),
                    status=discord.Status.online)
 
+# allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
+# allowed_contexts=app_commands.AppCommandContext(guild=True, dm_channel=True, private_channel=True),
+
 # connect4
 player_piece = 'R'
 ai_piece = 'Y'
@@ -119,6 +122,7 @@ class ChallengeView(discord.ui.View):
         for emoji in emotes:
             await self.message.add_reaction(emoji)
         self.game_sessions[self.message.id] = [self.board, self.player1, self.player2, 'R', 0, interaction.channel]
+        self.stop()
 
     @discord.ui.button(label="Decline", emoji="❌", style=discord.ButtonStyle.danger)
     async def decline_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -137,6 +141,57 @@ def create_connect4_embed(title: str, description: str, curr_player: discord.Mem
     embed.add_field(name=f":red_circle: {curr_player.name}", value="", inline=True)
     embed.add_field(name=f":yellow_circle: {other_player.name}", value="", inline=True)
     return embed
+
+class GameView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    #@discord.ui.select(options=[discord.SelectOption(label="1", value="1"),])
+    #async def select_action(self, interaction: discord.Interaction, select: discord.ui.Select):
+    #    if select.values[0] == "1":
+    #        await interaction.response.send_message("You selected option 1!")
+    #    elif select.values[0] == "2":
+    #        await interaction.response.send_message("You selected option 2!")
+
+    @discord.ui.button(emoji="1️⃣", style=discord.ButtonStyle.secondary)
+    async def column_1_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Handle column 1 move here
+        pass
+
+    @discord.ui.button(emoji="2️⃣", style=discord.ButtonStyle.secondary)
+    async def column_2_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Handle column 2 move here
+        pass
+
+    @discord.ui.button(emoji="3️⃣", style=discord.ButtonStyle.secondary)
+    async def column_3_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Handle column 3 move here
+        pass
+
+    @discord.ui.button(emoji="4️⃣", style=discord.ButtonStyle.secondary)
+    async def column_4_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Handle column 4 move here
+        pass
+
+    @discord.ui.button(emoji="5️⃣", style=discord.ButtonStyle.secondary)
+    async def column_5_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Handle column 5 move here
+        pass
+
+    @discord.ui.button(emoji="6️⃣", style=discord.ButtonStyle.secondary)
+    async def column_6_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Handle column 6 move here
+        pass
+
+    @discord.ui.button(emoji="7️⃣", style=discord.ButtonStyle.secondary)
+    async def column_7_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Handle column 7 move here
+        pass
+
+    @discord.ui.button(label="Forfeit", emoji="🏳", style=discord.ButtonStyle.danger)
+    async def forfeit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Handle forfeit logic here
+        pass
 
 
 @bot.event
@@ -286,13 +341,21 @@ async def say(interaction, channel: discord.TextChannel, message: str) -> None:
     await channel.send(str(message))
     await interaction.response.send_message(f"Message sent! {channel.mention}", ephemeral=True)
 
+@bot.tree.command(name="afk", description="Set your status to AFK with an optional reason")
+@app_commands.describe(reason="The reason you are AFK")
+async def afk_command(interaction: discord.Interaction, reason: str = "AFK") -> None:
+    # If someone pings the user, the bot will respond with the AFK message
+    afk_message = f"{interaction.user.nick} is currently AFK: {reason}"
+    # Store the AFK status in the user's attributes
+    interaction.user.afk = True
+    interaction.user.afk_reason = reason
+    await interaction.response.send_message(f"Your AFK status has been set: {reason}", ephemeral=True)
 
 # Context menu to see join date of other members
-# @bot.tree.context_menu(name="Show join date")
-# async def get_joined_date(interaction: discord.Interaction, member: discord.Member):
-#     await interaction.response.send_message(f"{member.mention} joined at {discord.utils.format_dt(member.joined_at)}",
-#                                             ephemeral=True)
-
+@bot.tree.context_menu(name="Show join date")
+async def get_joined_date(interaction: discord.Interaction, member: discord.Member) -> None:
+    await interaction.response.send_message(f"{member.mention} joined at {discord.utils.format_dt(member.joined_at)}",
+                                            ephemeral=True)
 
 # Report a message
 # @bot.tree.context_menu(name="Report message")
@@ -300,17 +363,16 @@ async def say(interaction, channel: discord.TextChannel, message: str) -> None:
 #     await interaction.response.send_message(f"Message reported: {str(message)}", ephemeral=True)
 
 
-@bot.command()
-async def connect4(ctx, *, player2: discord.Member = None):
-    if player2 is None:
-        player2 = bot.user
-    elif player2 == ctx.author:
+@bot.tree.command(name="connect4", description="Play a game of connect4 against another user or the bot")
+@app_commands.describe(player2="The player you want to challenge (or the bot)")
+async def connect4(interaction: discord.Interaction, player2: discord.Member) -> None:
+    if player2 == interaction.user:
         embed = discord.Embed(title=":x: Error", colour=discord.Colour(0xff0000),
                               description="You cannot play against yourself.")
-        await ctx.send(embed=embed)
-        return None
-    # player2 is now either the bot or another user
-    player1 = ctx.author
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+
+    player1 = interaction.user
     board = Board()
     if player2 == bot.user:
         embed = discord.Embed(title=":video_game: Game: connect4", colour=discord.Colour(0x00ff00),
@@ -318,23 +380,25 @@ async def connect4(ctx, *, player2: discord.Member = None):
                                           f":flag_white:: Forfeit")
         embed.add_field(name=f":red_circle: {player1.name}", value="", inline=True)
         embed.add_field(name=f":yellow_circle: {player2.name}", value="", inline=True)
-        message = await ctx.send(embed=embed)
+        await interaction.response.send_message(embed=embed, view=GameView())
+        message = await interaction.original_response()
         for emoji in emotes:
             await message.add_reaction(emoji)
         # add the game to the dictionary of active games
-        game_sessions[message.id] = [board, player1, player2, 'R', 0, ctx.channel]
+        game_sessions[message.id] = [board, player1, player2, 'R', 0, interaction.channel]
     # create "challenge" message
     else:
         embed = discord.Embed(title="⚔️ Challenge: connect4", colour=discord.Colour(0x00ff00),
                               description=f"{player1.mention} challenged {player2.mention} to a game of connect4!"
                               f"\n{player2.mention} has 60 seconds to accept or decline.")
         view = ChallengeView(player1, player2, board_slots, board, game_sessions, bot)
-        message = await ctx.send(embed=embed, view=view)
+        await interaction.response.send_message(embed=embed, view=view)
+        message = await interaction.original_response()
         view.message = message
         # await view.wait()
 
 
-@tasks.loop(seconds=60)
+@tasks.loop(seconds=30)
 async def afk():
     remove = []
     # check if the timer has reached the timeout for each game session
@@ -358,8 +422,50 @@ async def afk():
             await game_msg.clear_reactions()
             remove.append(key)
         else:
-            current_session[timer] += 60
+            current_session[timer] += 30
     for key in remove:
         del game_sessions[key]
+
+
+
+
+class Components(discord.ui.LayoutView):
+    container1 = discord.ui.Container(
+        discord.ui.TextDisplay(content="If life gives you toaster, make giant spaghetti soup."),
+        discord.ui.ActionRow(
+            discord.ui.Button(
+                style=discord.ButtonStyle.secondary,
+                label="1",
+                custom_id="a1953cc3a79d402ed9e3eb5247d0739c",
+            ),
+            discord.ui.Button(
+                style=discord.ButtonStyle.secondary,
+                label="2",
+                custom_id="598461ebc8434a888c9004646e08409c",
+            ),
+            discord.ui.Button(
+                style=discord.ButtonStyle.secondary,
+                label="3",
+                custom_id="1664dd5b60184ae094b5e45a48806505",
+            ),
+            discord.ui.Button(
+                style=discord.ButtonStyle.secondary,
+                label="4",
+                custom_id="e33ea37b89ca4a0dc1c535ab29fa64fa",
+            ),
+            discord.ui.Button(
+                style=discord.ButtonStyle.secondary,
+                label="5",
+                custom_id="cfb31984a1344532c2aab0638ffaab68",
+            ),
+        ),
+        discord.ui.TextDisplay(content="They said I couldn't write a novel, so I went to the moon and became a lizard."),
+    )
+
+
+@bot.command()
+async def send_components(ctx: commands.Context) -> None:
+    view = Components()
+    await ctx.send(view=view)
 
 bot.run(settings.DISCORD_API_SECRET)

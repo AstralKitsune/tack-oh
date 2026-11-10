@@ -38,9 +38,9 @@ class GameCommands(app_commands.Group):
                                   description=f"I win! I picked **{bot_item}** and you picked **{item.name}**")
             await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="connect4", description="Play connect4 against another user or the bot")
-    async def connect4(self, interaction: discord.Interaction):
-        pass
+    #@app_commands.command(name="connect4", description="Play connect4 against another user or the bot")
+    #async def connect4(self, interaction: discord.Interaction):
+    #    pass
 
 
 async def setup(bot):

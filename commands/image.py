@@ -22,7 +22,7 @@ class ImageCommands(app_commands.Group):
                                   app_commands.Choice(name="simp card", value="simpcard"),
                                   app_commands.Choice(name="triggered", value="triggered"),
                                   app_commands.Choice(name="wasted", value="wasted"),])
-    async def effect(self, interaction: discord.Interaction, member: discord.Member,
+    async def effect(self, interaction: discord.Interaction, member: discord.User,
                      effect: discord.app_commands.Choice[str]):
         pfp_url = member.display_avatar
 
